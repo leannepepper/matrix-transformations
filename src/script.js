@@ -6,12 +6,12 @@ import './style.css'
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
-var camera, scene, renderer
+let camera, scene, renderer
 
-var mesh
-var count = 3
-var dummy = new THREE.Object3D()
-// var matrix = new THREE.Matrix4()
+let mesh
+const count = 3
+const dummy = new THREE.Object3D()
+var matrix = new THREE.Matrix4()
 // var position = new THREE.Vector3()
 
 camera = new THREE.PerspectiveCamera(
@@ -31,29 +31,32 @@ scene = new THREE.Scene()
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
 
-var geometry = new THREE.BoxBufferGeometry(1, 1, 1)
+const geometry = new THREE.BoxBufferGeometry(1, 1, 1)
 geometry.scale(0.25, 0.25, 0.25)
 
-var material = new THREE.MeshBasicMaterial()
+const material = new THREE.MeshBasicMaterial()
 
 mesh = new THREE.InstancedMesh(geometry, material, count)
 scene.add(mesh)
 
-var i = 0
-var offset = (count - 1) / 2
+const offset = (count - 1) / 2
 
-for (var x = 0; x < count; x++) {
-  dummy.position.set(offset - x, 0, 0)
-  dummy.updateMatrix()
-  mesh.setMatrixAt(i++, dummy.matrix)
+for (let i = 0; i < count; i++) {
+  // You can set the position of each instance using a stand alone matrix like this:
+  matrix.set(1, 0, 0, offset - i, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+  mesh.setMatrixAt(i, matrix)
+
+  // Or you can use a dummy object to set the position on the local transform matrix like this:
+
+  // dummy.position.set(offset - i, 0, 0)
+  // dummy.updateMatrix()
+  // mesh.setMatrixAt(i, dummy.matrix)
 }
 
 renderer = new THREE.WebGLRenderer({ canvas: canvas })
 renderer.setPixelRatio(window.devicePixelRatio)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
-
-//
 
 window.addEventListener('resize', onWindowResize, false)
 
