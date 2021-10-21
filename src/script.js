@@ -3,95 +3,85 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import './style.css'
 
-/**
- * Base
- */
-
-/**
- * Sizes
- */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight
-}
-
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
-// Scene
-const scene = new THREE.Scene()
+var camera, scene, renderer
 
-/**
- * Camera
- */
-const camera = new THREE.PerspectiveCamera(
-  27,
+var mesh
+var count = 3
+var dummy = new THREE.Object3D()
+// var matrix = new THREE.Matrix4()
+// var position = new THREE.Vector3()
+
+camera = new THREE.PerspectiveCamera(
+  60,
   window.innerWidth / window.innerHeight,
-  20,
-  10000
+  0.1,
+  100
 )
 
-scene.add(camera)
+camera.position.set(1, 0, 5)
 
-/**
- * Lights
- */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
-scene.add(ambientLight)
+camera.lookAt(0, 0, 0)
 
-const pointLight = new THREE.PointLight(0xffffff, 0.5)
-pointLight.position.x = 2
-pointLight.position.y = 3
-pointLight.position.z = 2
-scene.add(pointLight)
-
-/**
- * Objects
- */
-
-window.addEventListener('resize', () => {
-  // Update sizes
-  sizes.width = window.innerWidth
-  sizes.height = window.innerHeight
-
-  // Update camera
-  camera.aspect = sizes.width / sizes.height
-  camera.updateProjectionMatrix()
-
-  // Update renderer
-  renderer.setSize(sizes.width, sizes.height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-})
+scene = new THREE.Scene()
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
 
-/**
- * Renderer
- */
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas
-})
-renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+var geometry = new THREE.BoxBufferGeometry(1, 1, 1)
+geometry.scale(0.25, 0.25, 0.25)
 
-/**
- * Animate
- */
-const clock = new THREE.Clock()
+var material = new THREE.MeshBasicMaterial()
 
-const tick = () => {
-  const elapsedTime = clock.getElapsedTime()
+mesh = new THREE.InstancedMesh(geometry, material, count)
+scene.add(mesh)
 
-  // Update controls
+var i = 0
+var offset = (count - 1) / 2
+
+for (var x = 0; x < count; x++) {
+  dummy.position.set(offset - x, 0, 0)
+  dummy.updateMatrix()
+  mesh.setMatrixAt(i++, dummy.matrix)
+}
+
+renderer = new THREE.WebGLRenderer({ canvas: canvas })
+renderer.setPixelRatio(window.devicePixelRatio)
+renderer.setSize(window.innerWidth, window.innerHeight)
+document.body.appendChild(renderer.domElement)
+
+//
+
+window.addEventListener('resize', onWindowResize, false)
+
+function onWindowResize () {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+
+  renderer.setSize(window.innerWidth, window.innerHeight)
+}
+
+function tick () {
+  requestAnimationFrame(tick)
+
   controls.update()
 
-  // Render
-  renderer.render(scene, camera)
+  // if (mesh) {
+  //   mesh.getMatrixAt(0, matrix)
 
-  // Call tick again on the next frame
-  window.requestAnimationFrame(tick)
+  //   position.setFromMatrixPosition(matrix) // extract position form transformationmatrix
+  //   position.x += 0.01 // move
+  //   matrix.setPosition(position) // write new positon back
+
+  //   mesh.setMatrixAt(0, matrix)
+
+  //   mesh.instanceMatrix.needsUpdate = true
+  // }
+
+  renderer.render(scene, camera)
 }
 
 tick()
